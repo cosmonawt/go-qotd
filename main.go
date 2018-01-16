@@ -1,38 +1,40 @@
 package main
 
 import (
-	"os"
 	"fmt"
-	"net"
-	"strings"
-	"math/rand"
 	"io/ioutil"
+	"log"
+	"math/rand"
+	"net"
+	"os"
+	"strings"
 )
 
 func randomQuote() ([]byte, error) {
 	bs, err := ioutil.ReadFile(os.Args[2])
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 
 	q := strings.Split(string(bs), "\n")
-	r := rand.Intn(len(q) - 1)
+	q = q[:len(q)-1]
+	r := rand.Intn(len(q))
 
 	return []byte(q[r]), nil
 }
 
 func server(port string) {
-	ln, err := net.Listen("tcp", ":" + port)
+	ln, err := net.Listen("tcp", ":"+port)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return
 	}
 
 	for {
 		c, err := ln.Accept()
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 			continue
 		}
 
@@ -48,16 +50,16 @@ func handler(c net.Conn) {
 
 	q, err := randomQuote()
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return
 	}
 	c.Write(q)
 }
 
-
 func main() {
 	a := os.Args[1:]
 	if len(a) < 2 {
+		fmt.Println("Incorrect arguments. The correct order is");
 		fmt.Println("usage: port, file")
 		return
 	}
