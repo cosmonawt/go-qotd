@@ -1,68 +1,59 @@
 package main
 
 import (
-	"os"
-	"fmt"
-	"net"
-	"strings"
-	"math/rand"
 	"io/ioutil"
+	"log"
+	"math/rand"
+	"net"
+	"os"
+	"strings"
 )
 
-func randomQuote() ([]byte, error) {
-	bs, err := ioutil.ReadFile(os.Args[2])
-	if err != nil {
-		fmt.Println(err)
-		return nil, err
-	}
-
-	q := strings.Split(string(bs), "\n")
-	r := rand.Intn(len(q) - 1)
-
-	return []byte(q[r]), nil
-}
-
-func server(port string) {
-	ln, err := net.Listen("tcp", ":" + port)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
+func server(ln net.Listener, quotes *[]string) error {
 	for {
 		c, err := ln.Accept()
 		if err != nil {
-			fmt.Println(err)
-			continue
+			return err
 		}
 
-		go handler(c)
+		go func() {
+			if err := handler(c, quotes); err != nil {
+				log.Printf("Error while handling request from %v: %v", c.RemoteAddr(), err)
+			}
+		}()
 	}
 }
 
-func handler(c net.Conn) {
+func handler(c net.Conn, quotes *[]string) error {
 	defer c.Close()
 
 	a := c.RemoteAddr()
-	fmt.Println("New connection: " + a.String())
+	log.Println("New connection: " + a.String())
 
-	q, err := randomQuote()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	c.Write(q)
+	r := rand.Intn(len(*quotes) - 1)
+	c.Write([]byte((*quotes)[r]))
+	return nil
 }
 
-
 func main() {
-	a := os.Args[1:]
-	if len(a) < 2 {
-		fmt.Println("usage: port, file")
+	args := os.Args[1:]
+	if len(args) < 2 {
+		log.Fatal("usage: port, file")
 		return
 	}
 
-	fmt.Println("Starting Server")
+	bs, err := ioutil.ReadFile(args[1])
+	if err != nil {
+		log.Println(err)
+	}
 
-	server(string(a[0]))
+	q := strings.Split(string(bs), "\n")
+
+	ln, err := net.Listen("tcp", ":"+args[0])
+	if err != nil {
+		log.Fatal("Error while creating listener: %v", err)
+	}
+
+	log.Println("Starting Server")
+	server(ln, &q)
 }

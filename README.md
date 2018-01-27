@@ -6,3 +6,5 @@ First steps in Go.
 Run server using `go run main.go [port] [quotes.csv]` and call it via curl: `curl localhost:[port]`
 
 For convenience I added a small script to download some quotes from [Forismatic.com](https://forismatic.com).
+
+Check out [takeyourhatoffs implementation](https://github.com/takeyourhatoff/go-qotd/tree/wip-speed) which is highly optimized as well :)
