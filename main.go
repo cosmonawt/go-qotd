@@ -44,7 +44,7 @@ func main() {
 
 	bs, err := ioutil.ReadFile(args[1])
 	if err != nil {
-		log.Println(err)
+		log.Fatal("Error while reading file: %v", err)
 	}
 
 	q := strings.Split(string(bs), "\n")
